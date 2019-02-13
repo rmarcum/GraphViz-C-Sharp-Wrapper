@@ -91,14 +91,11 @@ namespace GraphVizWrapper
                 return path.Substring(0, path.LastIndexOf('/'));
             }
         }
-
-        private string FilePath
-        {
-            get { return  GraphvizPath + this.GetRenderingEngine(this.renderingEngine) + ".exe"; }
-        }
+        //GraphvizPath + this.GetRenderingEngine(this.renderingEngine) + ".exe"
+        private string FilePath => $"C:\\Program Files (x86)\\Graphviz2.38\\bin\\{this.GetRenderingEngine(this.renderingEngine)}.exe";
 
         #endregion
- 
+
         /// <summary>
         /// Generates a graph based on the dot file passed in.
         /// </summary>
