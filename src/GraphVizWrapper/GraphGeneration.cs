@@ -9,9 +9,11 @@
 
 namespace GraphVizWrapper
 {
+    using System;
     using System.Collections.Generic;
     using System.Configuration;
     using System.IO;
+    using System.Reflection;
     
     using Commands;
     using Queries;
@@ -21,38 +23,54 @@ namespace GraphVizWrapper
     /// </summary>
     public class GraphGeneration : IGraphGeneration
     {
+        private const string ProcessFolder = "GraphViz";
         private const string ConfigFile = "config6";
 
-        private readonly IGetStartProcessQuery _startProcessQuery;
-        private readonly IGetProcessStartInfoQuery _getProcessStartInfoQuery;
-        private readonly IRegisterLayoutPluginCommand _registerLayoutPlugincommand;
-        private Enums.RenderingEngine _renderingEngine;
-        private readonly string _graphvizPath;
-        private readonly string _renderingEnginesPath;
+        private readonly IGetStartProcessQuery startProcessQuery;
+        private readonly IGetProcessStartInfoQuery getProcessStartInfoQuery;
+        private readonly IRegisterLayoutPluginCommand registerLayoutPlugincommand;
+        private Enums.RenderingEngine renderingEngine;
+        private String graphvizPath = null;
 
         public GraphGeneration(IGetStartProcessQuery startProcessQuery, IGetProcessStartInfoQuery getProcessStartInfoQuery, IRegisterLayoutPluginCommand registerLayoutPlugincommand)
         {
-            this._startProcessQuery = startProcessQuery;
-            this._getProcessStartInfoQuery = getProcessStartInfoQuery;
-            this._registerLayoutPlugincommand = registerLayoutPlugincommand;
+            this.startProcessQuery = startProcessQuery;
+            this.getProcessStartInfoQuery = getProcessStartInfoQuery;
+            this.registerLayoutPlugincommand = registerLayoutPlugincommand;
 
-            this._graphvizPath = ConfigurationManager.AppSettings["graphVizLocation"];
-            this._renderingEnginesPath = ConfigurationManager.AppSettings["renderingEnginesLocation"];
+            this.graphvizPath = ConfigurationManager.AppSettings["graphVizLocation"];
         }
 
         #region Properties
 
-      public Enums.RenderingEngine RenderingEngine
+        public String GraphvizPath
         {
-            get { return this._renderingEngine; }
-            set { this._renderingEngine = value; }
+            get { return graphvizPath ?? AssemblyDirectory + "/" + ProcessFolder; }
+            set
+            {
+                if (value != null && value.Trim().Length > 0)
+                {
+                    String path = value.Replace("\\", "/");
+                    graphvizPath = path.EndsWith("/") ? path.Substring(0, path.LastIndexOf('/')) : path;
+                }
+                else
+                {
+                    graphvizPath = null;
+                }
+            }
+        }
+        
+        public Enums.RenderingEngine RenderingEngine
+        {
+            get { return this.renderingEngine; }
+            set { this.renderingEngine = value; }
         }
 
         private string ConfigLocation
         {
             get
             {
-                return this._graphvizPath + "/" + GraphGeneration.ConfigFile;
+                return GraphvizPath + "/" + ConfigFile;
             }
         }
 
@@ -63,10 +81,20 @@ namespace GraphVizWrapper
                 return File.Exists(ConfigLocation);
             }
         }
+        
+        private static string AssemblyDirectory
+        {
+            get
+            {
+                var uriBuilder = new UriBuilder(Assembly.GetExecutingAssembly().CodeBase);
+                string path = Uri.UnescapeDataString(uriBuilder.Path);
+                return path.Substring(0, path.LastIndexOf('/'));
+            }
+        }
 
         private string FilePath
         {
-            get { return  this._renderingEnginesPath + "\\" + this.GetRenderingEngine(this._renderingEngine) + ".exe"; }
+            get { return  GraphvizPath + "/bin/" + this.GetRenderingEngine(this.renderingEngine) + ".exe"; }
         }
 
         #endregion
@@ -90,14 +118,14 @@ namespace GraphVizWrapper
 
             if (!ConfigExists)
             {
-                this._registerLayoutPlugincommand.Invoke(FilePath, this.RenderingEngine);
+                this.registerLayoutPlugincommand.Invoke(FilePath, this.RenderingEngine);
             }
 
             string fileType = this.GetReturnType(returnType);
 
             var processStartInfo = this.GetProcessStartInfo(fileType);
 
-            using (var process = this._startProcessQuery.Invoke(processStartInfo))
+            using (var process = this.startProcessQuery.Invoke(processStartInfo))
             {
                 process.BeginErrorReadLine();
                 using (var stdIn = process.StandardInput)
@@ -118,7 +146,7 @@ namespace GraphVizWrapper
         
         private System.Diagnostics.ProcessStartInfo GetProcessStartInfo(string returnType)
         {
-            return this._getProcessStartInfoQuery.Invoke(new ProcessStartInfoWrapper
+            return this.getProcessStartInfoQuery.Invoke(new ProcessStartInfoWrapper
             {
                 FileName = this.FilePath,
                 RedirectStandardInput = true,
