@@ -32,7 +32,10 @@ namespace GraphVizWrapper.Commands
                                                      CreateNoWindow = false
                                                  });
 
-            using (_getStartProcessQuery.Invoke(processStartInfo)) { }
+            using (_getStartProcessQuery.Invoke(processStartInfo))
+            { 
+                // Do Stuff
+            }
         }
 
         public void Invoke()

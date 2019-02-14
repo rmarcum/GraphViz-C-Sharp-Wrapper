@@ -16,6 +16,8 @@ namespace GraphVizWrapper
         /// </summary>
         Enums.RenderingEngine RenderingEngine { get; set; }
 
+        string GraphvizPath { get; set; }
+
         /// <summary>
         /// Generates a graph based on the dot file passed in.
         /// </summary>

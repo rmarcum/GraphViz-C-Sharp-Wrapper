@@ -11,6 +11,6 @@ namespace GraphVizWrapper.Queries
 {
     public interface IQuery<in TInput, out TOutput>
     {
-        TOutput Invoke(TInput input);
+        TOutput Invoke(TInput processStartInfo);
     }
 }
