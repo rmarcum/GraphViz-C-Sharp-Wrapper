@@ -37,10 +37,5 @@ namespace GraphVizWrapper.Commands
                 // Do Stuff
             }
         }
-
-        public void Invoke()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

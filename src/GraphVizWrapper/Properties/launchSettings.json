@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GraphVizWrapper": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "graphVizLocation": "C:\\Program Files (x86)\\Graphviz2.38\\bin\\"
+      }
+    }
+  }
+}
