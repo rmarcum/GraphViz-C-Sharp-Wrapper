@@ -9,96 +9,34 @@
 
 namespace GraphVizWrapper
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Configuration;
-    using System.IO;
-    using System.Reflection;
-    
     using Commands;
+
     using Queries;
+
+    using System.Collections.Generic;
+    using System.IO;
 
     /// <summary>
     /// The main entry class for the wrapper.
     /// </summary>
     public class GraphGeneration : IGraphGeneration
     {
-        private const string ProcessFolder = "GraphViz";
-        private const string ConfigFile = "config6";
+        public string GraphvizPath => "C:\\Program Files (x86)\\GraphViz2.38\\bin\\";
+        public Enums.RenderingEngine RenderingEngine { get; set; }
+
+        private string FilePath => GraphvizPath + GetRenderingEngine(RenderingEngine) + ".exe";
 
         private readonly IGetStartProcessQuery startProcessQuery;
         private readonly IGetProcessStartInfoQuery getProcessStartInfoQuery;
         private readonly IRegisterLayoutPluginCommand registerLayoutPlugincommand;
-        private Enums.RenderingEngine renderingEngine;
-        private String graphvizPath = null;
 
         public GraphGeneration(IGetStartProcessQuery startProcessQuery, IGetProcessStartInfoQuery getProcessStartInfoQuery, IRegisterLayoutPluginCommand registerLayoutPlugincommand)
         {
             this.startProcessQuery = startProcessQuery;
             this.getProcessStartInfoQuery = getProcessStartInfoQuery;
             this.registerLayoutPlugincommand = registerLayoutPlugincommand;
-
-            this.graphvizPath = ConfigurationManager.AppSettings["graphVizLocation"];
         }
 
-        #region Properties
-
-        public String GraphvizPath
-        {
-            get { return graphvizPath ?? AssemblyDirectory + "/" + ProcessFolder; }
-            set
-            {
-                if (value != null && value.Trim().Length > 0)
-                {
-                    String path = value.Replace("\\", "/");
-                    graphvizPath = path.EndsWith("/") ? path.Substring(0, path.LastIndexOf('/')) : path;
-                }
-                else
-                {
-                    graphvizPath = null;
-                }
-            }
-        }
-        
-        public Enums.RenderingEngine RenderingEngine
-        {
-            get { return this.renderingEngine; }
-            set { this.renderingEngine = value; }
-        }
-
-        private string ConfigLocation
-        {
-            get
-            {
-                return GraphvizPath + "/" + ConfigFile;
-            }
-        }
-
-        private bool ConfigExists
-        {
-            get
-            {
-                return File.Exists(ConfigLocation);
-            }
-        }
-        
-        private static string AssemblyDirectory
-        {
-            get
-            {
-                var uriBuilder = new UriBuilder(Assembly.GetExecutingAssembly().CodeBase);
-                string path = Uri.UnescapeDataString(uriBuilder.Path);
-                return path.Substring(0, path.LastIndexOf('/'));
-            }
-        }
-
-        private string FilePath
-        {
-            get { return  GraphvizPath + this.GetRenderingEngine(this.renderingEngine) + ".exe"; }
-        }
-
-        #endregion
- 
         /// <summary>
         /// Generates a graph based on the dot file passed in.
         /// </summary>
@@ -116,16 +54,13 @@ namespace GraphVizWrapper
 
             byte[] output;
 
-            if (!ConfigExists)
-            {
-                this.registerLayoutPlugincommand.Invoke(FilePath, this.RenderingEngine);
-            }
+            registerLayoutPlugincommand.Invoke(FilePath, RenderingEngine);
 
-            string fileType = this.GetReturnType(returnType);
+            string fileType = GetReturnType(returnType);
 
-            var processStartInfo = this.GetProcessStartInfo(fileType);
+            var processStartInfo = GetProcessStartInfo(fileType);
 
-            using (var process = this.startProcessQuery.Invoke(processStartInfo))
+            using (var process = startProcessQuery.Invoke(processStartInfo))
             {
                 process.BeginErrorReadLine();
                 using (var stdIn = process.StandardInput)
@@ -135,7 +70,7 @@ namespace GraphVizWrapper
                 using (var stdOut = process.StandardOutput)
                 {
                     var baseStream = stdOut.BaseStream;
-                    output = this.ReadFully(baseStream);
+                    output = ReadFully(baseStream);
                 }
             }
 
@@ -148,7 +83,7 @@ namespace GraphVizWrapper
         {
             return this.getProcessStartInfoQuery.Invoke(new ProcessStartInfoWrapper
             {
-                FileName = this.FilePath,
+                FileName = FilePath,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

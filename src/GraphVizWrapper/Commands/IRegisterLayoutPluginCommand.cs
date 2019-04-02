@@ -9,8 +9,8 @@
 
 namespace GraphVizWrapper.Commands
 {
-    public interface IRegisterLayoutPluginCommand : ICommand
+    public interface IRegisterLayoutPluginCommand
     {
-        void Invoke(string conigFilePath, Enums.RenderingEngine renderingEngine); 
+        void Invoke(string configFilePath, Enums.RenderingEngine renderingEngine); 
     }
 }

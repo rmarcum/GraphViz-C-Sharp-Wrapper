@@ -13,18 +13,18 @@ namespace GraphVizWrapper.Queries
 {
     public class GetProcessStartInfoQuery : IGetProcessStartInfoQuery
     {
-        public System.Diagnostics.ProcessStartInfo Invoke(IProcessStartInfoWrapper startInfoWrapper)
+        public System.Diagnostics.ProcessStartInfo Invoke(IProcessStartInfoWrapper processStartInfo)
         {
             return new System.Diagnostics.ProcessStartInfo
                        {
-                           WorkingDirectory = Path.GetDirectoryName(startInfoWrapper.FileName) ?? "",
-                           FileName = '"' + startInfoWrapper.FileName + '"',
-                           Arguments = startInfoWrapper.Arguments,
-                           RedirectStandardInput = startInfoWrapper.RedirectStandardInput,
-                           RedirectStandardOutput = startInfoWrapper.RedirectStandardOutput,
-                           RedirectStandardError = startInfoWrapper.RedirectStandardError,
-                           UseShellExecute = startInfoWrapper.UseShellExecute,
-                           CreateNoWindow = startInfoWrapper.CreateNoWindow
+                           WorkingDirectory = Path.GetDirectoryName(processStartInfo.FileName),
+                           FileName = '"' + processStartInfo.FileName + '"',
+                           Arguments = processStartInfo.Arguments,
+                           RedirectStandardInput = processStartInfo.RedirectStandardInput,
+                           RedirectStandardOutput = processStartInfo.RedirectStandardOutput,
+                           RedirectStandardError = processStartInfo.RedirectStandardError,
+                           UseShellExecute = processStartInfo.UseShellExecute,
+                           CreateNoWindow = processStartInfo.CreateNoWindow
                        };
         }
     }
